@@ -16,6 +16,7 @@ const News = (props) => {
   const updateNews = async () => {
     props.setprogress(10);
     const url = `https://news-api-backend-jbmt.onrender.com/api/news?country=${props.country}&category=${props.category}&page=1&pageSize=${props.pageSize}`;
+    setPage(1);
     let data = await fetch(url);
     props.setprogress(30);
     let parsedData = await data.json();
@@ -28,6 +29,7 @@ const News = (props) => {
 
   useEffect(() => {
     document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
+    setLoading(true);
     updateNews();
     // eslint-disable-next-line
   }, [props.category, props.country]);
@@ -38,7 +40,16 @@ const News = (props) => {
     setPage(nextPage);
     let data = await fetch(url);
     let parsedData = await data.json();
-    setArticles(articles.concat(parsedData.articles || []));
+
+    // ✅ Avoid duplicate articles by URL
+    setArticles((prevArticles) => {
+      const newArticles = parsedData.articles || [];
+      const uniqueArticles = newArticles.filter(
+        (newItem) => !prevArticles.some((existing) => existing.url === newItem.url)
+      );
+      return [...prevArticles, ...uniqueArticles];
+    });
+
     setTotalResults(parsedData.totalResults || 0);
     setLoading(false);
   };
@@ -52,7 +63,7 @@ const News = (props) => {
       <InfiniteScroll
         dataLength={articles.length}
         next={fetchMoreData}
-        hasMore={articles.length !== totalResults}
+        hasMore={articles.length < totalResults}
         loader={<Spinner />}
       >
         <div className="container">

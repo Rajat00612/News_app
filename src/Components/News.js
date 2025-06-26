@@ -11,35 +11,35 @@ const News = (props) => {
 
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  }
+  };
 
   const updateNews = async () => {
     props.setprogress(10);
-    const url = `https://cors-anywhere.herokuapp.com/https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
+    const url = `https://news-api-backend-jbmt.onrender.com/api/news?country=${props.country}&category=${props.category}&page=1&pageSize=${props.pageSize}`;
     let data = await fetch(url);
     props.setprogress(30);
     let parsedData = await data.json();
     props.setprogress(70);
-    setArticles(parsedData.articles);
-    setTotalResults(parsedData.totalResults);
+    setArticles(parsedData.articles || []);
+    setTotalResults(parsedData.totalResults || 0);
     setLoading(false);
     props.setprogress(100);
-  }
+  };
 
   useEffect(() => {
     document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
     updateNews();
     // eslint-disable-next-line
-  }, []);
+  }, [props.category, props.country]);
 
   const fetchMoreData = async () => {
     const nextPage = page + 1;
-    const url = `https://cors-anywhere.herokuapp.com/https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${nextPage}&pageSize=${props.pageSize}`;
+    const url = `https://news-api-backend-jbmt.onrender.com/api/news?country=${props.country}&category=${props.category}&page=${nextPage}&pageSize=${props.pageSize}`;
     setPage(nextPage);
     let data = await fetch(url);
     let parsedData = await data.json();
-    setArticles(articles.concat(parsedData.articles));
-    setTotalResults(parsedData.totalResults);
+    setArticles(articles.concat(parsedData.articles || []));
+    setTotalResults(parsedData.totalResults || 0);
     setLoading(false);
   };
 
@@ -57,21 +57,19 @@ const News = (props) => {
       >
         <div className="container">
           <div className="row">
-            {articles.map((element) => {
-              return (
-                <div className="col-md-4" key={element.url}>
-                  <NewsItem
-                    title={element.title || ""}
-                    description={element.description || ""}
-                    imageUrl={element.urlToImage || ""}
-                    newsUrl={element.url || ""}
-                    author={element.author || "Unknown"}
-                    date={element.publishedAt || ""}
-                    source={(element.source && element.source.name) || "Unknown"}
-                  />
-                </div>
-              );
-            })}
+            {articles.map((element) => (
+              <div className="col-md-4" key={element.url}>
+                <NewsItem
+                  title={element.title || ""}
+                  description={element.description || ""}
+                  imageUrl={element.urlToImage || ""}
+                  newsUrl={element.url || ""}
+                  author={element.author || "Unknown"}
+                  date={element.publishedAt || ""}
+                  source={(element.source && element.source.name) || "Unknown"}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </InfiniteScroll>
